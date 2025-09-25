@@ -1,3 +1,5 @@
+from importlib.metadata import requires
+
 from rest_framework import serializers
 from users.models import User
 from .models import Project, Task
@@ -10,7 +12,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['name', 'description', 'owner', 'members', 'members_info']
+        fields = ['id', 'name', 'description', 'owner', 'members', 'visibility', 'members_info']
 
     def get_members_info(self, obj):
         return [{"id": user.id, "username": user.username} for user in obj.members.all()]
@@ -26,7 +28,9 @@ class TaskSerializer(serializers.ModelSerializer):
         read_only_fields = ['task_creator']
 
     def validate_deadline(self, value):
-        if value < datetime.date.today():
+        if value is None:
+            return value
+        elif value < datetime.date.today():
             raise serializers.ValidationError("Deadline must be later than today's date")
         return value
 
@@ -35,3 +39,15 @@ class TaskSerializer(serializers.ModelSerializer):
         if not value.owner == request.user and request.user not in value.members.all():
                 raise serializers.ValidationError("User must be an owner or a member of the selected project!")
         return value
+
+    def validate(self, attrs):
+        project = attrs.get("project")
+        assigned_to = attrs.get("assigned_to")
+
+        if assigned_to is None:
+            return attrs
+
+        if not assigned_to in project.members.all():
+            raise serializers.ValidationError({"assigned_to": "Assigned user must be a member of the selected project!"})
+
+        return attrs

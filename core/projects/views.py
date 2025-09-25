@@ -8,11 +8,22 @@ from rest_framework import status
 from .filters import TaskFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
+from .permissions import IsProjectOwnerOrMember, IsTaskOwnerOrAssigned
+from django.db.models import Q
 # Create your views here.
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+    permission_classes = [IsProjectOwnerOrMember]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Project.objects.filter(
+            Q(visibility='no_restrictions') |
+            Q(owner=user) |
+            Q(members=user)
+        ).distinct()
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -25,6 +36,16 @@ class TaskViewSet(viewsets.ModelViewSet):
     ordering_fields = ["deadline", "priority", "created_at"]
     ordering = ["created_at"]
     search_fields = ['title', 'description']
+    permission_classes = [IsTaskOwnerOrAssigned]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Task.objects.filter(
+            Q(task_creator=user) |
+            Q(assigned_to=user) |
+            Q(project__members=user) |
+            Q(project__owner=user)
+        ).distinct()
 
     @action(detail=True, methods=["post"])
     def mark_as_done(self, request, pk=None):
