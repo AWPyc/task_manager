@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from .models import Project, Task
 from .serializers import ProjectSerializer, TaskSerializer
@@ -9,16 +8,18 @@ from .filters import TaskFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
 from .permissions import IsProjectOwnerOrMember, IsTaskOwnerOrAssigned
+from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 # Create your views here.
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [IsProjectOwnerOrMember]
+    permission_classes = [IsAuthenticated, IsProjectOwnerOrMember]
 
     def get_queryset(self):
         user = self.request.user
+
         return Project.objects.filter(
             Q(visibility='no_restrictions') |
             Q(owner=user) |
@@ -36,7 +37,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     ordering_fields = ["deadline", "priority", "created_at"]
     ordering = ["created_at"]
     search_fields = ['title', 'description']
-    permission_classes = [IsTaskOwnerOrAssigned]
+    permission_classes = [IsAuthenticated, IsTaskOwnerOrAssigned]
 
     def get_queryset(self):
         user = self.request.user
