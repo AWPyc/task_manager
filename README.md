@@ -28,7 +28,7 @@ Supports JWT & session authentication, role-based permissions, project visibilit
 
    ```bash
    git clone https://github.com/AWPyc/task_manager.git
-   cd task-manager
+   cd task_manager
    ```
 
 2. Copy example environment and adjust values:
@@ -82,6 +82,7 @@ Supports JWT & session authentication, role-based permissions, project visibilit
 ## 📂 Project Structure
 
 ```
+.github/            # CI file
 core/               # Main Django project
 projects/           # Projects app
 tasks/              # Tasks app
@@ -97,10 +98,12 @@ requirements.txt
 
 ## 🧪 Tests
 
-To run tests locally (not implemented yet):
+To run tests locally:
 
-```bash
-docker-compose run backend-api python manage.py test
-```
+Enter the container:
 
+`docker exec -it django-backend bash`
+
+Run tests:
+`pytest`
 ---
