@@ -105,5 +105,7 @@ Enter the container:
 `docker exec -it django-backend bash`
 
 Run tests:
+
 `pytest`
+
 ---
